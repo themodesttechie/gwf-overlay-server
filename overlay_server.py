@@ -141,6 +141,61 @@ def overlay():
     })
 
 
+@app.route("/post-to-blotato", methods=["POST"])
+def post_to_blotato():
+    """Proxy endpoint for Blotato API calls.
+    Accepts individual fields so Make.com doesn't need to construct nested JSON.
+    This avoids the JSON escaping issue with Make.com's raw body substitution.
+    """
+    data = request.get_json(force=True)
+
+    # Required fields
+    account_id = data.get("accountId", "35643")
+    platform = data.get("platform", "tiktok")
+    text = data.get("text", "")
+    media_url = data.get("mediaUrl", "")
+    api_key = data.get("apiKey", "")
+
+    # Optional TikTok target fields
+    privacy = data.get("privacyLevel", "PUBLIC_TO_EVERYONE")
+    auto_music = data.get("autoAddMusic", True)
+    is_ai = data.get("isAiGenerated", True)
+
+    # Build the properly structured Blotato payload
+    payload = {
+        "post": {
+            "accountId": account_id,
+            "content": {
+                "text": text,
+                "mediaUrls": [media_url],
+                "platform": platform
+            },
+            "target": {
+                "targetType": platform,
+                "privacyLevel": privacy,
+                "disabledComments": False,
+                "disabledDuet": False,
+                "disabledStitch": False,
+                "isBrandedContent": False,
+                "isYourBrand": False,
+                "isAiGenerated": is_ai,
+                "autoAddMusic": auto_music
+            }
+        }
+    }
+
+    try:
+        resp = requests.post(
+            "https://backend.blotato.com/v2/posts",
+            json=payload,
+            headers={"blotato-api-key": api_key, "Content-Type": "application/json"},
+            timeout=30
+        )
+        return jsonify(resp.json()), resp.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/images/<filename>", methods=["GET"])
 def serve_image(filename):
     """Serve a branded image by filename."""
