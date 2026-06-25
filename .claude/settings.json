@@ -1,0 +1,7 @@
+{
+  "disabledMcpjsonServers": [
+    "claude-in-chrome",
+    "claude_ai_Canva"
+  ],
+  "_comment": "Auto-managed by .scope-mcp.py \u2014 disables MCP servers this project doesn't use. Edit NEEDS_* sets in the script if this is wrong."
+}

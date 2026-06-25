@@ -1,0 +1,161 @@
+{
+    "name": "GrowWest - Daily Row Setup (Scenario Pre-A)",
+    "flow": [
+        {
+            "id": 1,
+            "module": "google-sheets:filterRows",
+            "version": 2,
+            "parameters": {
+                "__IMTCONN__": 13972126
+            },
+            "mapper": {
+                "from": "drive",
+                "limit": "1",
+                "filter": [
+                    [
+                        {
+                            "a": "A",
+                            "b": "",
+                            "o": "text:notequal"
+                        }
+                    ]
+                ],
+                "sheetId": "Pillar Schedule",
+                "sortOrder": "desc",
+                "spreadsheetId": "1LmdMphdUFCpZ5W7RGjCZsf4Tz6n9tPiassbOLyb39Po",
+                "tableFirstRow": "A1:Z1",
+                "includesHeaders": true,
+                "valueRenderOption": "FORMATTED_VALUE",
+                "dateTimeRenderOption": "FORMATTED_STRING"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "from": {
+                            "label": "Select from My Drive"
+                        },
+                        "sheetId": {
+                            "mode": "chose",
+                            "label": "Pillar Schedule"
+                        },
+                        "sortOrder": {
+                            "mode": "chose",
+                            "label": "Descending"
+                        },
+                        "spreadsheetId": {
+                            "mode": "chose",
+                            "label": "GrowWest Social Media Automation"
+                        },
+                        "tableFirstRow": {
+                            "label": "A-Z"
+                        },
+                        "includesHeaders": {
+                            "mode": "chose",
+                            "label": "Yes"
+                        },
+                        "valueRenderOption": {
+                            "mode": "chose",
+                            "label": "Formatted value"
+                        },
+                        "dateTimeRenderOption": {
+                            "mode": "chose",
+                            "label": "Formatted string"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "google"
+                            },
+                            "label": "My Google connection (growwestfinance@gmail.com)"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "id": 2,
+            "module": "google-sheets:addRow",
+            "version": 2,
+            "parameters": {
+                "__IMTCONN__": 13972126
+            },
+            "mapper": {
+                "from": "drive",
+                "mode": "select",
+                "values": {
+                    "0": "{{formatDate(now; \"YYYY-MM-DD\")}}",
+                    "1": "{{switch(ifempty(1.`1`; \"Investment Loans\"); \"First Home Buyers\"; \"Refinancing\"; \"Refinancing\"; \"Investment Loans\"; \"Investment Loans\"; \"First Home Buyers\"; \"First Home Buyers\")}}",
+                    "3": "single_image",
+                    "4": "To do"
+                },
+                "sheetId": "Pillar Schedule",
+                "spreadsheetId": "/1LmdMphdUFCpZ5W7RGjCZsf4Tz6n9tPiassbOLyb39Po",
+                "includesHeaders": true,
+                "tableFirstRow": "A1:Z1",
+                "valueInputOption": "USER_ENTERED"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "from": {
+                            "label": "My Drive"
+                        },
+                        "mode": {
+                            "label": "Search by path"
+                        },
+                        "sheetId": {
+                            "label": "Pillar Schedule"
+                        },
+                        "spreadsheetId": {
+                            "path": [
+                                "GrowWest Social Media Automation"
+                            ]
+                        },
+                        "includesHeaders": {
+                            "label": "Yes"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "google"
+                            },
+                            "label": "My Google connection (growwestfinance@gmail.com)"
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu2.make.com"
+    }
+}

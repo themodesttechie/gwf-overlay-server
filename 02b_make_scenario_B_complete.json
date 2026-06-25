@@ -1,0 +1,353 @@
+{
+  "_comment": "GROW WEST FINANCE — SCENARIO B: PREDIS WEBHOOK COMPLETE",
+  "_notes": [
+    "This scenario is triggered by Predis.ai's webhook when image generation completes",
+    "Step 1: Create this scenario in Make.com, which generates a unique webhook URL",
+    "Step 2: Register that webhook URL in Predis.ai: app.predis.ai > My Account > API tab > Webhook URL",
+    "Step 3: Predis.ai will POST to this URL when each image finishes generating",
+    "The webhook payload contains: status, post_id, generated_media[].url, brand_id, caption",
+    "This scenario finds the Airtable record by Predis post_id, downloads the asset, uploads to Drive, then notifies",
+    "Module reference map: 1=Webhook, 2=Download Asset, 3=Google Drive Upload, 4=Airtable Search, 5=Airtable Update, 6=Gmail"
+  ],
+  "blueprint": {
+    "name": "GrowWest – Content Complete (Scenario B)",
+    "flow": [
+      {
+        "id": 1,
+        "module": "gateway:CustomWebHook",
+        "version": 1,
+        "parameters": {
+          "hook": "YOUR_MAKE_WEBHOOK_ID",
+          "maxResults": 1
+        },
+        "mapper": {},
+        "metadata": {
+          "designer": {
+            "x": 0,
+            "y": 0
+          },
+          "parameters": [
+            {
+              "name": "hook",
+              "type": "hook:gateway-webhook",
+              "label": "Webhook",
+              "required": true
+            },
+            {
+              "name": "maxResults",
+              "type": "number",
+              "label": "Maximum number of results"
+            }
+          ],
+          "interface": [
+            {
+              "name": "status",
+              "type": "text",
+              "label": "Status"
+            },
+            {
+              "name": "post_id",
+              "type": "text",
+              "label": "Post ID"
+            },
+            {
+              "name": "brand_id",
+              "type": "text",
+              "label": "Brand ID"
+            },
+            {
+              "name": "caption",
+              "type": "text",
+              "label": "Caption"
+            },
+            {
+              "name": "generated_media",
+              "type": "array",
+              "label": "Generated Media"
+            }
+          ],
+          "_webhook_setup": "After importing this scenario, go to Make.com > Webhooks tab, find the webhook created for this scenario, and copy its URL. Paste that URL into Predis.ai > My Account > API tab > Webhook URL"
+        },
+        "filter": {
+          "name": "Only process completed generations",
+          "conditions": [
+            [
+              {
+                "a": "{{1.status}}",
+                "b": "completed",
+                "o": "equal"
+              }
+            ]
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "module": "http:ActionSendData",
+        "version": 3,
+        "parameters": {
+          "handleErrors": true,
+          "useNewZLibDecompress": true
+        },
+        "mapper": {
+          "url": "{{1.generated_media[1].url}}",
+          "method": "get",
+          "headers": [],
+          "bodyType": "",
+          "parseResponse": false,
+          "followRedirect": true,
+          "rejectUnauthorized": true,
+          "serializeUrl": false,
+          "shareCookies": false,
+          "timeout": 30000
+        },
+        "metadata": {
+          "designer": {
+            "x": 300,
+            "y": 0
+          },
+          "restore": {
+            "method": {
+              "label": "GET"
+            },
+            "bodyType": {
+              "label": "Empty"
+            }
+          },
+          "_note": "Downloads the Predis.ai asset as binary. The URL expires in 1 hour — this must run immediately after the webhook fires. The response .body contains the binary image data."
+        },
+        "onerror": [
+          {
+            "id": 20,
+            "module": "google-sheets:appendRow",
+            "version": 2,
+            "parameters": {
+              "__IMTCONN__": "YOUR_GOOGLE_SHEETS_CONNECTION_ID"
+            },
+            "mapper": {
+              "spreadsheetId": "YOUR_GOOGLE_SHEET_ID",
+              "sheetName": "Errors",
+              "values": {
+                "Timestamp": "{{now}}",
+                "Module": "2 - Download Asset",
+                "Error": "Asset download failed. URL may have expired. Predis post_id: {{1.post_id}}. URL: {{1.generated_media[1].url}}",
+                "Pillar": "N/A - check Airtable for post_id {{1.post_id}}"
+              }
+            },
+            "metadata": {
+              "designer": {
+                "x": 300,
+                "y": 150
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "module": "google-drive:ActionUploadFile",
+        "version": 3,
+        "parameters": {
+          "__IMTCONN__": "YOUR_GOOGLE_DRIVE_CONNECTION_ID",
+          "drive": "MyDrive"
+        },
+        "mapper": {
+          "folderId": "YOUR_GOOGLE_DRIVE_MONTHLY_FOLDER_ID",
+          "fileName": "growwest_{{1.post_id}}_{{formatDate(now; \"YYYY-MM-DD\")}}{{if(equal(3.post_format; \"carousel\"); \"_carousel\"; \"_image\")}}.jpg",
+          "data": "{{2.body}}",
+          "mimeType": "image/jpeg",
+          "convert": false
+        },
+        "metadata": {
+          "designer": {
+            "x": 600,
+            "y": 0
+          },
+          "restore": {
+            "parameters": {
+              "__IMTCONN__": {
+                "label": "Grow West Google Drive"
+              },
+              "drive": {
+                "label": "My Drive"
+              }
+            }
+          },
+          "_note": "Uploads to the current month's folder. Folder ID must be updated monthly OR use the dynamic folder creation workaround documented in 08_known_issues.md. File is named with post_id and date for easy identification. The module returns .id (Drive file ID) and .webViewLink (shareable URL)."
+        },
+        "onerror": [
+          {
+            "id": 21,
+            "module": "google-sheets:appendRow",
+            "version": 2,
+            "parameters": {
+              "__IMTCONN__": "YOUR_GOOGLE_SHEETS_CONNECTION_ID"
+            },
+            "mapper": {
+              "spreadsheetId": "YOUR_GOOGLE_SHEET_ID",
+              "sheetName": "Errors",
+              "values": {
+                "Timestamp": "{{now}}",
+                "Module": "3 - Google Drive Upload",
+                "Error": "Drive upload failed: {{error.message}}. Predis post_id: {{1.post_id}}",
+                "Pillar": "N/A"
+              }
+            },
+            "metadata": {
+              "designer": {
+                "x": 600,
+                "y": 150
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "module": "airtable:ActionListRecords",
+        "version": 3,
+        "parameters": {
+          "__IMTCONN__": "YOUR_AIRTABLE_CONNECTION_ID"
+        },
+        "mapper": {
+          "base": "YOUR_AIRTABLE_BASE_ID",
+          "table": "YOUR_AIRTABLE_TABLE_ID",
+          "filterByFormula": "{{\"{\"}}{Predis Post ID} = '{{1.post_id}}'{{\"}\"}",
+          "maxRecords": 1,
+          "sort": [],
+          "view": ""
+        },
+        "metadata": {
+          "designer": {
+            "x": 900,
+            "y": 0
+          },
+          "restore": {
+            "parameters": {
+              "__IMTCONN__": {
+                "label": "Grow West Airtable"
+              }
+            },
+            "base": {
+              "label": "GrowWest Social Media"
+            },
+            "table": {
+              "label": "Content Posts"
+            }
+          },
+          "_note": "Finds the Airtable record created by Scenario A using the Predis post_id. Returns .records[1].id which is the Airtable record ID needed for module 5."
+        }
+      },
+      {
+        "id": 5,
+        "module": "airtable:ActionUpdateRecord",
+        "version": 3,
+        "parameters": {
+          "__IMTCONN__": "YOUR_AIRTABLE_CONNECTION_ID"
+        },
+        "mapper": {
+          "base": "YOUR_AIRTABLE_BASE_ID",
+          "table": "YOUR_AIRTABLE_TABLE_ID",
+          "id": "{{4.records[1].id}}",
+          "fields": {
+            "Status": "Review",
+            "Asset Drive URL": "{{3.webViewLink}}",
+            "Asset Drive File ID": "{{3.id}}",
+            "Predis Asset URL": "{{1.generated_media[1].url}}",
+            "Asset Generated At": "{{now}}"
+          },
+          "typecast": false,
+          "useColumnId": false
+        },
+        "metadata": {
+          "designer": {
+            "x": 1200,
+            "y": 0
+          },
+          "restore": {
+            "parameters": {
+              "__IMTCONN__": {
+                "label": "Grow West Airtable"
+              }
+            },
+            "base": {
+              "label": "GrowWest Social Media"
+            },
+            "table": {
+              "label": "Content Posts"
+            }
+          },
+          "_note": "Updates the record status from 'Generating' to 'Review' and adds the permanent Google Drive URL. This triggers the Airtable automation (configured separately) that will eventually handle Phase 2 publishing."
+        }
+      },
+      {
+        "id": 6,
+        "module": "gmail:ActionSendEmail",
+        "version": 1,
+        "parameters": {
+          "__IMTCONN__": "YOUR_GMAIL_CONNECTION_ID"
+        },
+        "mapper": {
+          "to": "YOUR_BUSINESS_OWNER_EMAIL",
+          "subject": "New post ready for review — {{4.records[1].fields.Pillar}} — {{formatDate(now; \"DD/MM/YYYY\")}}",
+          "content": "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;margin:0;padding:20px}table{max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1)}.header{background:#1a3a5c;padding:24px 32px;text-align:center}.header h1{color:#ffffff;margin:0;font-size:20px;font-weight:600}.header p{color:#a8c4e0;margin:8px 0 0;font-size:14px}.body{padding:32px}.hook-box{background:#f0f6ff;border-left:4px solid #1a3a5c;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:24px}.hook-box h2{margin:0 0 8px;font-size:13px;color:#666;text-transform:uppercase;letter-spacing:0.5px}.hook-box p{margin:0;font-size:18px;font-weight:700;color:#1a3a5c;line-height:1.4}.compliance-warning{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;margin-bottom:24px;display:none}.compliance-warning.show{display:block}.compliance-warning h3{margin:0 0 8px;color:#856404;font-size:14px}.section{margin-bottom:24px}.section h3{font-size:13px;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 12px;border-bottom:1px solid #eee;padding-bottom:8px}.caption-box{background:#f9f9f9;border-radius:8px;padding:16px;font-size:14px;line-height:1.6;color:#333;white-space:pre-wrap}.asset-preview{text-align:center;margin-bottom:24px}.asset-preview img{max-width:100%;border-radius:8px;border:1px solid #eee}.cta-button{text-align:center;margin-top:32px}.cta-button a{background:#1a3a5c;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:600;display:inline-block}.footer{background:#f5f5f5;padding:16px 32px;text-align:center;font-size:12px;color:#999}</style></head><body><table width='100%' cellpadding='0' cellspacing='0'><tr><td><div class='header'><h1>New Post Ready for Review</h1><p>{{4.records[1].fields.Pillar}} &nbsp;|&nbsp; {{formatDate(now; \"DD/MM/YYYY\")}}</p></div><div class='body'>{{if(equal(4.records[1].fields.`Compliance Flag`; true); \"<div class='compliance-warning show'><h3>⚠️ Compliance Review Required</h3><p>\" + 4.records[1].fields.`Compliance Note` + \"</p></div>\"; \"\")}}<div class='hook-box'><h2>Hook</h2><p>{{4.records[1].fields.Hook}}</p></div><div class='asset-preview'><img src='{{3.webViewLink}}' alt='Generated social media asset' /><p style='font-size:12px;color:#999;margin:8px 0 0;'>Asset stored in Google Drive</p></div><div class='section'><h3>TikTok / Instagram Caption</h3><div class='caption-box'>{{4.records[1].fields.`Caption TikTok IG`}}</div></div><div class='section'><h3>LinkedIn Caption</h3><div class='caption-box'>{{4.records[1].fields.`Caption LinkedIn`}}</div></div><div class='cta-button'><a href='https://airtable.com/YOUR_AIRTABLE_BASE_ID/YOUR_AIRTABLE_TABLE_ID/{{4.records[1].id}}'>Review &amp; Approve in Airtable →</a></div></div><div class='footer'>Grow West Finance — Social Media Automation<br/>To manage notifications, update your Airtable settings.</div></td></tr></table></body></html>",
+          "contentType": "html",
+          "from": "",
+          "cc": "",
+          "bcc": "",
+          "attachments": []
+        },
+        "metadata": {
+          "designer": {
+            "x": 1500,
+            "y": 0
+          },
+          "restore": {
+            "parameters": {
+              "__IMTCONN__": {
+                "label": "Grow West Gmail"
+              }
+            }
+          },
+          "_note": "Replace YOUR_BUSINESS_OWNER_EMAIL with the actual email address. Also replace YOUR_AIRTABLE_BASE_ID and YOUR_AIRTABLE_TABLE_ID in the Airtable link at the bottom of the email HTML."
+        }
+      }
+    ],
+    "metadata": {
+      "version": 1,
+      "scenario": {
+        "roundtrips": 1,
+        "maxErrors": 3,
+        "autoCommit": true,
+        "autoCommitTriggerLast": true,
+        "sequential": false,
+        "confidential": false,
+        "dataloss": false,
+        "dlq": false,
+        "freshVariables": false
+      },
+      "designer": {
+        "orphans": []
+      }
+    }
+  },
+  "scheduling": {
+    "type": "on-demand",
+    "_note": "This scenario runs on-demand, triggered by the Predis.ai webhook. The scheduling object here is for the Make.com import — the actual trigger is the gateway:CustomWebHook module."
+  },
+  "_setup_checklist": [
+    "1. Import this blueprint in Make.com",
+    "2. Go to the Webhooks section in Make.com — find the new webhook and copy its URL",
+    "3. Log into app.predis.ai > My Account > API tab > Webhook URL — paste the Make.com webhook URL",
+    "4. Replace YOUR_GOOGLE_SHEETS_CONNECTION_ID with your Make.com Google Sheets connection ID",
+    "5. Replace YOUR_GOOGLE_SHEET_ID with your Google Sheet ID",
+    "6. Replace YOUR_GOOGLE_DRIVE_CONNECTION_ID with your Make.com Google Drive connection ID",
+    "7. Replace YOUR_GOOGLE_DRIVE_MONTHLY_FOLDER_ID with the current month's folder ID in Google Drive",
+    "8. Replace YOUR_AIRTABLE_CONNECTION_ID with your Make.com Airtable connection ID",
+    "9. Replace YOUR_AIRTABLE_BASE_ID with your Airtable base ID (starts with 'app')",
+    "10. Replace YOUR_AIRTABLE_TABLE_ID with your Airtable table ID (starts with 'tbl')",
+    "11. Replace YOUR_GMAIL_CONNECTION_ID with your Make.com Gmail connection ID",
+    "12. Replace YOUR_BUSINESS_OWNER_EMAIL with the business owner's email address",
+    "13. Update the Airtable direct link in the Gmail HTML body (search for YOUR_AIRTABLE_BASE_ID in the content field)"
+  ]
+}

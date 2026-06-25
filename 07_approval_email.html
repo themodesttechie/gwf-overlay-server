@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>New Post Ready for Review</title>
+  <!--
+    APPROVAL EMAIL TEMPLATE — GROW WEST FINANCE
+    ============================================
+    This template is used by Make.com's Gmail module (Scenario B, Module 6).
+
+    To use in Make.com:
+    - Paste the entire HTML into the Gmail module "Content" field
+    - Replace static placeholder text with Make.com dynamic variables (see VARIABLES section below)
+    - Set contentType to "html"
+
+    VARIABLES to replace for Make.com:
+      [PILLAR]           → {{4.records[1].fields.Pillar}}
+      [DATE]             → {{formatDate(now; "DD/MM/YYYY")}}
+      [HOOK]             → {{4.records[1].fields.Hook}}
+      [COMPLIANCE_WARN]  → conditionally show/hide using Make.com if() function
+      [COMPLIANCE_NOTE]  → {{4.records[1].fields.`Compliance Note`}}
+      [CAPTION_TIKTOK]   → {{4.records[1].fields.`Caption TikTok IG`}}
+      [CAPTION_LINKEDIN] → {{4.records[1].fields.`Caption LinkedIn`}}
+      [ASSET_URL]        → {{3.webViewLink}}
+      [AIRTABLE_LINK]    → https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID/{{4.records[1].id}}
+      [CTA]              → {{4.records[1].fields.CTA}}
+      [POST_FORMAT]      → {{4.records[1].fields.`Post Format`}}
+      [BODY_POINT_1]     → {{4.records[1].fields.`Body Point 1`}}
+      [BODY_POINT_2]     → {{4.records[1].fields.`Body Point 2`}}
+      [BODY_POINT_3]     → {{4.records[1].fields.`Body Point 3`}}
+
+    SUBJECT LINE to use in Make.com subject field:
+      New post ready for review — [PILLAR] — [DATE]
+      → New post ready for review — {{4.records[1].fields.Pillar}} — {{formatDate(now; "DD/MM/YYYY")}}
+  -->
+  <style>
+    /* Reset */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f0f2f5;
+      color: #1a1a1a;
+      padding: 20px 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .email-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #0f2744 0%, #1a3a5c 100%);
+      border-radius: 12px 12px 0 0;
+      padding: 28px 32px;
+      text-align: center;
+    }
+
+    .header .brand {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #7ab3d9;
+      margin-bottom: 8px;
+    }
+
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .header .meta {
+      font-size: 13px;
+      color: #a8c4e0;
+    }
+
+    .header .meta span {
+      display: inline-block;
+      background: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 3px 12px;
+      margin: 2px 3px;
+    }
+
+    /* Body */
+    .body {
+      background: #ffffff;
+      padding: 32px;
+    }
+
+    /* Compliance Warning */
+    .compliance-warning {
+      background: #fff8e1;
+      border: 1.5px solid #f59e0b;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .compliance-warning .icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .compliance-warning .content h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 6px;
+    }
+
+    .compliance-warning .content p {
+      font-size: 13px;
+      color: #78350f;
+      line-height: 1.5;
+    }
+
+    /* Hook */
+    .hook-card {
+      background: #f0f6ff;
+      border-left: 4px solid #1a3a5c;
+      border-radius: 0 10px 10px 0;
+      padding: 18px 22px;
+      margin-bottom: 24px;
+    }
+
+    .hook-card .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #4a7aab;
+      margin-bottom: 8px;
+    }
+
+    .hook-card .hook-text {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f2744;
+      line-height: 1.35;
+    }
+
+    /* Asset */
+    .asset-section {
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .asset-section .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    .asset-image-wrapper {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #e8e8e8;
+      display: inline-block;
+      max-width: 100%;
+    }
+
+    .asset-image-wrapper img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .asset-fallback {
+      background: #f5f5f5;
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      padding: 40px 20px;
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+    }
+
+    .asset-link {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #1a3a5c;
+      text-decoration: underline;
+    }
+
+    /* Key points */
+    .key-points {
+      background: #f9fafb;
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 24px;
+    }
+
+    .key-points .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 14px;
+    }
+
+    .key-point-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+    }
+
+    .key-point-item:last-child { margin-bottom: 0; }
+
+    .key-point-item .bullet {
+      width: 20px;
+      height: 20px;
+      background: #1a3a5c;
+      border-radius: 50%;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Caption sections */
+    .caption-section {
+      margin-bottom: 24px;
+    }
+
+    .caption-section .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    .caption-box {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: #333;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .platform-badge {
+      display: inline-block;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-tiktok { background: #000; color: #fff; }
+    .badge-ig { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
+    .badge-linkedin { background: #0a66c2; color: #fff; }
+    .badge-facebook { background: #1877f2; color: #fff; }
+
+    .cta-bar {
+      background: #f0f6ff;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    .cta-bar .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #4a7aab;
+      margin-bottom: 4px;
+    }
+
+    .cta-bar .cta-text {
+      font-weight: 600;
+      color: #0f2744;
+    }
+
+    /* Action button */
+    .action-section {
+      text-align: center;
+      padding: 16px 0 8px;
+    }
+
+    .approve-btn {
+      display: inline-block;
+      background: #0f2744;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 16px 36px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      margin-bottom: 12px;
+    }
+
+    .action-section .hint {
+      font-size: 12px;
+      color: #999;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: #eee;
+      margin: 24px 0;
+    }
+
+    /* Footer */
+    .footer {
+      background: #f0f2f5;
+      border-radius: 0 0 12px 12px;
+      padding: 20px 32px;
+      text-align: center;
+    }
+
+    .footer p {
+      font-size: 12px;
+      color: #999;
+      line-height: 1.6;
+    }
+
+    .footer a {
+      color: #1a3a5c;
+    }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      body { padding: 12px 8px; }
+      .header, .body { padding: 24px 20px; }
+      .header h1 { font-size: 18px; }
+      .hook-card .hook-text { font-size: 17px; }
+      .approve-btn { padding: 14px 24px; font-size: 15px; display: block; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="brand">Grow West Finance — Content Review</div>
+      <h1>New Post Ready for Review</h1>
+      <div class="meta">
+        <span>📋 [PILLAR]</span>
+        <span>📅 [DATE]</span>
+        <span>🖼️ [POST_FORMAT]</span>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+
+      <!-- COMPLIANCE WARNING (show only if compliance_flag = true) -->
+      <!-- In Make.com, wrap this entire block in: {{if(equal(4.records[1].fields.`Compliance Flag`; true); "<this html>"; "")}} -->
+      <div class="compliance-warning">
+        <div class="icon">⚠️</div>
+        <div class="content">
+          <h3>Compliance Review Required Before Posting</h3>
+          <p>[COMPLIANCE_NOTE]</p>
+          <p style="margin-top:8px;font-size:12px;">Please review this claim with your compliance guidelines before approving. When in doubt, edit the caption in Airtable before changing Status to Approved.</p>
+        </div>
+      </div>
+
+      <!-- Hook -->
+      <div class="hook-card">
+        <div class="label">Hook Line</div>
+        <div class="hook-text">"[HOOK]"</div>
+      </div>
+
+      <!-- Asset Image -->
+      <div class="asset-section">
+        <div class="label">Generated Visual</div>
+        <div class="asset-image-wrapper">
+          <!-- Replace [ASSET_URL] with the Google Drive direct image URL -->
+          <!-- Note: Drive's webViewLink (/view) shows a preview page, not the raw image -->
+          <!-- For inline image embedding, convert to: https://drive.google.com/uc?export=view&id=FILE_ID -->
+          <!-- In Make.com: https://drive.google.com/uc?export=view&id={{3.id}} -->
+          <img src="https://drive.google.com/uc?export=view&id=[DRIVE_FILE_ID]"
+               alt="Generated social media visual for [PILLAR]"
+               style="max-width:520px;width:100%;" />
+        </div>
+        <p style="margin-top:10px;">
+          <a class="asset-link" href="[ASSET_URL]">Open full image in Google Drive →</a>
+        </p>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Key Points -->
+      <div class="key-points">
+        <div class="label">Content Key Points</div>
+        <div class="key-point-item">
+          <span class="bullet">1</span>
+          <span>[BODY_POINT_1]</span>
+        </div>
+        <div class="key-point-item">
+          <span class="bullet">2</span>
+          <span>[BODY_POINT_2]</span>
+        </div>
+        <div class="key-point-item">
+          <span class="bullet">3</span>
+          <span>[BODY_POINT_3]</span>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-bar">
+        <div class="label">Call to Action</div>
+        <div class="cta-text">[CTA]</div>
+      </div>
+
+      <!-- TikTok / Instagram Caption -->
+      <div class="caption-section">
+        <div class="label">
+          <span class="platform-badge badge-tiktok">TikTok</span>
+          <span class="platform-badge badge-ig">Instagram</span>
+          Caption
+        </div>
+        <div class="caption-box">[CAPTION_TIKTOK]</div>
+      </div>
+
+      <!-- LinkedIn Caption -->
+      <div class="caption-section">
+        <div class="label">
+          <span class="platform-badge badge-linkedin">LinkedIn</span>
+          Caption
+        </div>
+        <div class="caption-box">[CAPTION_LINKEDIN]</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Approve Button -->
+      <div class="action-section">
+        <a href="[AIRTABLE_LINK]" class="approve-btn">
+          Review &amp; Approve in Airtable →
+        </a>
+        <p class="hint">Opens directly to this post's record. Change Status to "Approved" to queue for publishing, or "Rejected" to discard.</p>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        Grow West Finance — Automated Content Pipeline<br/>
+        This email was generated automatically. Do not reply to this email.<br/>
+        To manage posts, visit <a href="https://airtable.com">Airtable</a>.
+        To pause automation, deactivate the Make.com scenario.
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>
+
+<!--
+=================================================================
+MAKE.COM INTEGRATION NOTES
+=================================================================
+
+HOW TO USE THIS IN THE GMAIL MODULE:
+
+1. In Scenario B, Module 6 (gmail:ActionSendEmail):
+   - Set contentType: "html"
+   - Paste this entire HTML into the "content" field
+
+2. Replace placeholders with Make.com variables:
+
+   [PILLAR]          →  {{4.records[1].fields.Pillar}}
+   [DATE]            →  {{formatDate(now; "DD/MM/YYYY")}}
+   [POST_FORMAT]     →  {{4.records[1].fields.`Post Format`}}
+   [HOOK]            →  {{4.records[1].fields.Hook}}
+   [COMPLIANCE_NOTE] →  {{4.records[1].fields.`Compliance Note`}}
+   [BODY_POINT_1]    →  {{4.records[1].fields.`Body Point 1`}}
+   [BODY_POINT_2]    →  {{4.records[1].fields.`Body Point 2`}}
+   [BODY_POINT_3]    →  {{4.records[1].fields.`Body Point 3`}}
+   [CTA]             →  {{4.records[1].fields.CTA}}
+   [CAPTION_TIKTOK]  →  {{4.records[1].fields.`Caption TikTok IG`}}
+   [CAPTION_LINKEDIN]→  {{4.records[1].fields.`Caption LinkedIn`}}
+   [ASSET_URL]       →  {{3.webViewLink}}
+   [DRIVE_FILE_ID]   →  {{3.id}}
+   [AIRTABLE_LINK]   →  https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID/{{4.records[1].id}}
+
+3. For the compliance warning block, wrap the entire .compliance-warning div with:
+   {{if(equal(4.records[1].fields.`Compliance Flag`; true); "[compliance warning HTML]"; "")}}
+
+4. SUBJECT LINE for the Gmail module:
+   New post ready for review — {{4.records[1].fields.Pillar}} — {{formatDate(now; "DD/MM/YYYY")}}
+
+IMPORTANT — Google Drive image embedding:
+   The standard Drive "view" URL (webViewLink) shows a preview page, not a raw image.
+   For the <img> src to work in email clients, use the direct download URL format:
+   https://drive.google.com/uc?export=view&id={{3.id}}
+
+   This only works if the file/folder is set to "Anyone with the link can view".
+   Without that permission, the image will show as broken in the email.
+
+   Set folder sharing: Right-click the Google Drive folder > Share >
+   Change to "Anyone with the link" > Viewer > Done.
+=================================================================
+-->
